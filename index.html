@@ -13,134 +13,85 @@
 }
 
 body {
-    margin: 0;
-    min-height: 100vh;
-    overflow: hidden;
+    margin:0;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    overflow:hidden;
+
     background:
-        radial-gradient(circle at top, #333, #090909 70%);
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    radial-gradient(circle at top,#333,#080808);
+
     font-family:
-        "Segoe UI",
-        "Helvetica Neue",
-        Arial,
-        sans-serif;
-    color: white;
+    "Segoe UI",
+    Arial,
+    sans-serif;
+
+    color:white;
 }
 
 
 .container {
-    text-align: center;
-    width: 100%;
-    padding: 20px;
+    text-align:center;
+    width:100%;
+    padding:20px;
 }
 
 
-/* 3D BUTTON */
+
+/* BUTTON */
 
 button {
 
-    width: min(70vw, 330px);
-    height: min(70vw, 330px);
+    width:min(70vw,330px);
+    height:min(70vw,330px);
 
-    border-radius: 50%;
-    border: none;
-
-    background:
-        radial-gradient(circle at 35% 25%,
-        #ff5555,
-        #e00000 45%,
-        #8b0000 100%);
-
-    color:white;
-
-    font-size: clamp(32px, 8vw, 65px);
-    font-weight:900;
-    letter-spacing:2px;
+    border-radius:50%;
+    border:none;
 
     cursor:pointer;
 
+    font-size:
+    clamp(35px,8vw,65px);
+
+    font-weight:900;
+
+    color:white;
+
+    background:
+    radial-gradient(circle at 35% 25%,
+    #ff5555,
+    #d00000 50%,
+    #700000);
+
+
     text-shadow:
-        0 3px 4px rgba(0,0,0,.5);
+    0 4px 5px #400;
+
 
     box-shadow:
 
-        inset 0 10px 20px rgba(255,255,255,.35),
+    inset 0 12px 20px rgba(255,255,255,.35),
 
-        inset 0 -20px 30px rgba(0,0,0,.45),
+    inset 0 -25px 30px rgba(0,0,0,.5),
 
-        0 20px 40px rgba(0,0,0,.8),
+    0 25px 45px rgba(0,0,0,.8),
 
-        0 0 35px rgba(255,0,0,.8);
+    0 0 35px red;
 
 
     transition:
-        transform .15s,
-        box-shadow .15s;
+    .3s ease;
+
 }
 
 
 button:active {
 
     transform:
-        translateY(8px)
-        scale(.97);
-
-
-    box-shadow:
-
-        inset 0 5px 15px rgba(0,0,0,.5),
-
-        0 8px 15px rgba(0,0,0,.8),
-
-        0 0 35px red;
-
-}
-
-
-
-/* ACTIVE GLOW */
-
-
-.glow {
-
-    animation:
-        pulse 1s infinite alternate;
-
-}
-
-
-@keyframes pulse {
-
-from {
-
-    box-shadow:
-
-    inset 0 10px 20px rgba(255,255,255,.35),
-
-    inset 0 -20px 30px rgba(0,0,0,.45),
-
-    0 20px 40px rgba(0,0,0,.8),
-
-    0 0 40px red;
-
-}
-
-
-to {
-
-    box-shadow:
-
-    inset 0 10px 20px rgba(255,255,255,.45),
-
-    inset 0 -20px 30px rgba(0,0,0,.5),
-
-    0 20px 40px rgba(0,0,0,.8),
-
-    0 0 120px red;
-
-}
+    scale(.96)
+    translateY(6px);
 
 }
 
@@ -164,36 +115,31 @@ to {
     blur(10px);
 
 
-    box-shadow:
-    0 10px 30px rgba(0,0,0,.5);
-
-
     font-size:
     clamp(18px,4vw,32px);
 
-    line-height:
-    1.6;
+
+    line-height:1.7;
+
+
+    box-shadow:
+    0 10px 30px rgba(0,0,0,.5);
 
 }
 
 
+
 .number {
 
-    font-weight:900;
+    color:#ff5555;
 
-    color:#ff4444;
+    font-weight:900;
 
     text-shadow:
     0 0 10px red;
 
 }
 
-
-.loading {
-
-    color:#aaa;
-
-}
 
 
 </style>
@@ -219,16 +165,8 @@ CLICK
 
 <br>
 
-
 📱 Your clicks:
 <span id="mine" class="number">...</span>
-
-
-<br>
-
-
-👥 Devices:
-<span id="devices" class="number">...</span>
 
 
 </div>
@@ -276,23 +214,92 @@ if (!deviceID) {
 const button =
 document.getElementById("button");
 
-
 const total =
 document.getElementById("total");
-
 
 const mine =
 document.getElementById("mine");
 
 
-const devices =
-document.getElementById("devices");
+
+
+
+// BUTTON COLORS EVERY 1000 CLICKS
+
+const colors = [
+
+    {
+        main:"#d00000",
+        light:"#ff5555",
+        dark:"#700000"
+    },
+
+    {
+        main:"#0055ff",
+        light:"#55aaff",
+        dark:"#002266"
+    },
+
+    {
+        main:"#00aa44",
+        light:"#55ff99",
+        dark:"#005522"
+    },
+
+    {
+        main:"#aa00cc",
+        light:"#ee66ff",
+        dark:"#550066"
+    },
+
+    {
+        main:"#ff8800",
+        light:"#ffcc55",
+        dark:"#994400"
+    }
+
+];
+
+
+
+function updateButtonColor(clicks){
+
+    let level =
+    Math.floor(clicks / 1000)
+    %
+    colors.length;
+
+
+    let c =
+    colors[level];
+
+
+    button.style.background =
+    `
+    radial-gradient(
+    circle at 35% 25%,
+    ${c.light},
+    ${c.main} 50%,
+    ${c.dark}
+    )
+    `;
+
+
+    button.style.boxShadow =
+    `
+    inset 0 12px 20px rgba(255,255,255,.35),
+    inset 0 -25px 30px rgba(0,0,0,.5),
+    0 25px 45px rgba(0,0,0,.8),
+    0 0 35px ${c.main}
+    `;
+
+}
 
 
 
 
 
-// LOAD GLOBAL TOTAL
+// LOAD TOTAL
 
 async function getTotal(){
 
@@ -313,10 +320,19 @@ async function getTotal(){
         await r.json();
 
 
-        if(Array.isArray(d) && d[0]) {
+        if(d[0]){
+
+            let clicks =
+            d[0].total_clicks;
+
 
             total.textContent =
-            d[0].total_clicks;
+            clicks;
+
+
+            updateButtonColor(
+            clicks
+            );
 
         }
 
@@ -345,7 +361,7 @@ async function getMine(){
 
         const r = await fetch(
 
-        `${SUPABASE_URL}/rest/v1/device_clicks?device_id=eq.${deviceID}&select=clicks`,
+        `${SUPABASE_URL}/rest/v1/device_clicks?device_id=eq.${deviceID}`,
 
         {
             headers
@@ -411,123 +427,17 @@ async function getMine(){
 
 
 
-// KEEP DEVICE ONLINE
 
-async function updatePresence(){
-
-    try {
-
-
-        await fetch(
-
-        `${SUPABASE_URL}/rest/v1/online_devices?on_conflict=device_id`,
-
-        {
-
-            method:"POST",
-
-            headers:{
-
-                ...headers,
-
-                "Prefer":
-                "resolution=merge-duplicates"
-
-            },
-
-            body:JSON.stringify({
-
-                device_id:deviceID,
-
-                last_seen:
-                new Date().toISOString()
-
-            })
-
-        }
-
-        );
-
-
-    } catch(e){
-
-        console.log(
-        "Presence error",
-        e
-        );
-
-    }
-
-}
-
-
-
-
-
-
-
-// COUNT DEVICES
-
-async function getDevices(){
-
-    try {
-
-
-        const r = await fetch(
-
-        `${SUPABASE_URL}/rest/v1/online_devices?select=id`,
-
-        {
-
-            headers
-
-        }
-
-        );
-
-
-        const d =
-        await r.json();
-
-
-        if(Array.isArray(d)){
-
-            devices.textContent =
-            d.length;
-
-        }
-
-
-    } catch(e){
-
-        console.log(
-        "Device error",
-        e
-        );
-
-    }
-
-}
-
-
-
-
-
-// CLICK BUTTON
+// CLICK
 
 button.onclick = async ()=>{
 
 
-    button.classList.toggle(
-        "glow"
-    );
-
-
-
     try {
 
 
-        const r = await fetch(
+        const r =
+        await fetch(
 
         `${SUPABASE_URL}/rest/v1/rpc/increment_clicks`,
 
@@ -544,12 +454,19 @@ button.onclick = async ()=>{
         );
 
 
+
         const newTotal =
         await r.json();
 
 
+
         total.textContent =
         newTotal;
+
+
+        updateButtonColor(
+        newTotal
+        );
 
 
 
@@ -603,43 +520,22 @@ button.onclick = async ()=>{
 
 
 
-// START PAGE
+// START
 
 getTotal();
 
 getMine();
 
-updatePresence();
-
-getDevices();
-
-
-
-// LIVE UPDATES
 
 
 setInterval(
 getTotal,
-2000
+3000
 );
-
-
-setInterval(
-updatePresence,
-5000
-);
-
-
-setInterval(
-getDevices,
-2000
-);
-
 
 
 </script>
 
 
 </body>
-
 </html>
