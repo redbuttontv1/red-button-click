@@ -58,6 +58,7 @@ button {
     font-size: clamp(20px, 5vw, 40px);
 }
 </style>
+
 </head>
 
 <body>
@@ -71,107 +72,210 @@ button {
 <br>
 📱 Your clicks: <span id="mine">0</span>
 <br>
-👥 Devices: <span id="devices">1</span>
+👥 Devices: <span id="devices">0</span>
 </div>
 
 </div>
 
 
 <script>
+
 const SUPABASE_URL = "https://oudnngdsfgzteluiusir.supabase.co";
 const SUPABASE_KEY = "sb_publishable_DDySrSay0NRsscyOjakvtA_au0dNYv8";
 
+
 const headers = {
-  "apikey": SUPABASE_KEY,
-  "Authorization": "Bearer " + SUPABASE_KEY,
-  "Content-Type": "application/json"
+    "apikey": SUPABASE_KEY,
+    "Authorization": "Bearer " + SUPABASE_KEY,
+    "Content-Type": "application/json"
 };
 
+
 let deviceID = localStorage.getItem("deviceID");
+
 if (!deviceID) {
-  deviceID = crypto.randomUUID();
-  localStorage.setItem("deviceID", deviceID);
+    deviceID = crypto.randomUUID();
+    localStorage.setItem("deviceID", deviceID);
 }
+
 
 const button = document.getElementById("button");
 const total = document.getElementById("total");
 const mine = document.getElementById("mine");
+const devices = document.getElementById("devices");
 
-async function getTotal() {
-  const r = await fetch(
-    `${SUPABASE_URL}/rest/v1/button_stats?id=eq.1&select=total_clicks`,
-    { headers }
-  );
 
-  const d = await r.json();
-  if (d.length) total.textContent = d[0].total_clicks;
-}
 
-async function getMine() {
-  const r = await fetch(
-    `${SUPABASE_URL}/rest/v1/device_clicks?device_id=eq.${deviceID}&select=clicks`,
-    { headers }
-  );
+// GLOBAL TOTAL
 
-  const d = await r.json();
+async function getTotal(){
 
-  if (d.length) {
-    mine.textContent = d[0].clicks;
-  } else {
-    await fetch(
-      `${SUPABASE_URL}/rest/v1/device_clicks`,
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          device_id: deviceID,
-          clicks: 0
-        })
-      }
+    const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/button_stats?id=eq.1&select=total_clicks`,
+        {headers}
     );
 
-    mine.textContent = 0;
-  }
+    const d = await r.json();
+
+    if(d.length){
+        total.textContent = d[0].total_clicks;
+    }
 }
 
-button.onclick = async () => {
 
-  button.classList.toggle("glow");
 
-  // Increment global counter safely
-  const rpc = await fetch(
-    `${SUPABASE_URL}/rest/v1/rpc/increment_clicks`,
-    {
-      method: "POST",
-      headers,
-      body: "{}"
+// PERSONAL DEVICE CLICKS
+
+async function getMine(){
+
+    const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/device_clicks?device_id=eq.${deviceID}`,
+        {headers}
+    );
+
+    const d = await r.json();
+
+
+    if(d.length){
+
+        mine.textContent = d[0].clicks;
+
+    } else {
+
+
+        await fetch(
+            `${SUPABASE_URL}/rest/v1/device_clicks`,
+            {
+                method:"POST",
+                headers,
+                body:JSON.stringify({
+                    device_id:deviceID,
+                    clicks:0
+                })
+            }
+        );
+
+
+        mine.textContent = 0;
     }
-  );
+}
 
-  const newTotal = await rpc.json();
-  total.textContent = newTotal;
 
-  // Update this device's counter
-  let my = Number(mine.textContent) + 1;
 
-  await fetch(
-    `${SUPABASE_URL}/rest/v1/device_clicks?device_id=eq.${deviceID}`,
-    {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({
-        clicks: my
-      })
-    }
-  );
+// ONLINE DEVICES
 
-  mine.textContent = my;
+async function updatePresence(){
+
+    await fetch(
+        `${SUPABASE_URL}/rest/v1/online_devices`,
+        {
+            method:"POST",
+            headers,
+            body:JSON.stringify({
+                device_id:deviceID,
+                last_seen:new Date().toISOString()
+            })
+        }
+    );
+
+
+    await fetch(
+        `${SUPABASE_URL}/rest/v1/online_devices?device_id=eq.${deviceID}`,
+        {
+            method:"PATCH",
+            headers,
+            body:JSON.stringify({
+                last_seen:new Date().toISOString()
+            })
+        }
+    );
+
+}
+
+
+
+async function getDevices(){
+
+    const time =
+    new Date(Date.now()-10000).toISOString();
+
+
+    const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/online_devices?last_seen=gt.${time}&select=id`,
+        {
+            headers
+        }
+    );
+
+
+    const d = await r.json();
+
+    devices.textContent = d.length;
+
+}
+
+
+
+
+// BUTTON CLICK
+
+button.onclick = async ()=>{
+
+
+    button.classList.toggle("glow");
+
+
+    const r = await fetch(
+        `${SUPABASE_URL}/rest/v1/rpc/increment_clicks`,
+        {
+            method:"POST",
+            headers,
+            body:"{}"
+        }
+    );
+
+
+    const newTotal = await r.json();
+
+    total.textContent = newTotal;
+
+
+
+    let myClicks =
+    Number(mine.textContent)+1;
+
+
+    await fetch(
+        `${SUPABASE_URL}/rest/v1/device_clicks?device_id=eq.${deviceID}`,
+        {
+            method:"PATCH",
+            headers,
+            body:JSON.stringify({
+                clicks:myClicks
+            })
+        }
+    );
+
+
+    mine.textContent=myClicks;
+
 };
+
+
+
+// START
 
 getTotal();
 getMine();
+updatePresence();
+getDevices();
 
-setInterval(getTotal, 2000);
+
+setInterval(getTotal,2000);
+setInterval(updatePresence,5000);
+setInterval(getDevices,2000);
+
+
 </script>
 
 
