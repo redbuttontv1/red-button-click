@@ -166,7 +166,7 @@ async function getMine(){
 
 async function updatePresence(){
 
-    await fetch(
+    const r = await fetch(
         `${SUPABASE_URL}/rest/v1/online_devices`,
         {
             method:"POST",
@@ -175,13 +175,15 @@ async function updatePresence(){
                 "Prefer":"resolution=merge-duplicates"
             },
             body:JSON.stringify({
-                device_id:deviceID,
-                last_seen:new Date().toISOString()
+                device_id: deviceID,
+                last_seen: new Date().toISOString()
             })
         }
     );
 
+    console.log("Presence:", r.status);
 }
+
 
 
 async function getDevices(){
