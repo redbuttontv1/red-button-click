@@ -186,10 +186,8 @@ async function updatePresence(){
 
 async function getDevices(){
 
-    const time = new Date(Date.now() - 10000).toISOString();
-
     const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/online_devices?last_seen=gt.${time}&select=id`,
+        `${SUPABASE_URL}/rest/v1/online_devices?select=id`,
         {
             headers
         }
@@ -197,14 +195,16 @@ async function getDevices(){
 
     const d = await r.json();
 
-    console.log("Devices response:", d);
+    console.log("Online devices:", d);
 
     if (Array.isArray(d)) {
-devices.textContent = d.length || 0;
+        devices.textContent = d.length;
     } else {
-        devices.textContent = "0";
+        devices.textContent = 0;
     }
+
 }
+
 
 
 
