@@ -170,21 +170,12 @@ async function updatePresence(){
         `${SUPABASE_URL}/rest/v1/online_devices`,
         {
             method:"POST",
-            headers,
+            headers:{
+                ...headers,
+                "Prefer":"resolution=merge-duplicates"
+            },
             body:JSON.stringify({
                 device_id:deviceID,
-                last_seen:new Date().toISOString()
-            })
-        }
-    );
-
-
-    await fetch(
-        `${SUPABASE_URL}/rest/v1/online_devices?device_id=eq.${deviceID}`,
-        {
-            method:"PATCH",
-            headers,
-            body:JSON.stringify({
                 last_seen:new Date().toISOString()
             })
         }
@@ -209,7 +200,7 @@ async function getDevices(){
     console.log("Devices response:", d);
 
     if (Array.isArray(d)) {
-        devices.textContent = d.length;
+devices.textContent = d.length || 0;
     } else {
         devices.textContent = "0";
     }
