@@ -193,24 +193,33 @@ async function updatePresence(){
 }
 
 
-
 async function getDevices(){
 
-    const time =
-    new Date(Date.now()-10000).toISOString();
+    try {
+
+        const time =
+        new Date(Date.now()-10000).toISOString();
 
 
-    const r = await fetch(
-        `${SUPABASE_URL}/rest/v1/online_devices?last_seen=gt.${time}&select=id`,
-        {
-            headers
-        }
-    );
+        const r = await fetch(
+            `${SUPABASE_URL}/rest/v1/online_devices?last_seen=gt.${time}&select=id`,
+            {
+                headers
+            }
+        );
 
 
-    const d = await r.json();
+        const d = await r.json();
 
-    devices.textContent = d.length;
+        devices.textContent = d.length;
+
+
+    } catch(error) {
+
+        console.log("Device counter error:", error);
+        devices.textContent = "0";
+
+    }
 
 }
 
