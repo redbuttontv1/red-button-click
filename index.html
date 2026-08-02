@@ -81,138 +81,97 @@ button {
 const SUPABASE_URL = "https://oudnngdsfgzteluiusir.supabase.co";
 const SUPABASE_KEY = "sb_publishable_DDySrSay0NRsscyOjakvtA_au0dNYv8";
 
-let deviceID = localStorage.getItem("deviceID");
+const headers = {
+  "apikey": SUPABASE_KEY,
+  "Authorization": "Bearer " + SUPABASE_KEY,
+  "Content-Type": "application/json"
+};
 
+let deviceID = localStorage.getItem("deviceID");
 if (!deviceID) {
-    deviceID = crypto.randomUUID();
-    localStorage.setItem("deviceID", deviceID);
+  deviceID = crypto.randomUUID();
+  localStorage.setItem("deviceID", deviceID);
 }
 
 const button = document.getElementById("button");
 const total = document.getElementById("total");
 const mine = document.getElementById("mine");
 
+async function getTotal() {
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/button_stats?id=eq.1&select=total_clicks`,
+    { headers }
+  );
 
-// Load global total
-async function loadTotal() {
-
-    const response = await fetch(
-        SUPABASE_URL + "/rest/v1/button_stats?id=eq.1",
-        {
-            headers:{
-                "apikey": SUPABASE_KEY
-            }
-        }
-    );
-
-    const data = await response.json();
-
-    if(data[0]){
-        total.textContent = data[0].total_clicks;
-    }
+  const d = await r.json();
+  if (d.length) total.textContent = d[0].total_clicks;
 }
 
+async function getMine() {
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/device_clicks?device_id=eq.${deviceID}&select=clicks`,
+    { headers }
+  );
 
-// Load this device's clicks
-async function loadMyClicks(){
+  const d = await r.json();
 
-    const response = await fetch(
-        SUPABASE_URL + "/rest/v1/device_clicks?device_id=eq." + deviceID,
-        {
-            headers:{
-                "apikey": SUPABASE_KEY
-            }
-        }
+  if (d.length) {
+    mine.textContent = d[0].clicks;
+  } else {
+    await fetch(
+      `${SUPABASE_URL}/rest/v1/device_clicks`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          device_id: deviceID,
+          clicks: 0
+        })
+      }
     );
 
-    const data = await response.json();
-
-
-    if(data.length > 0){
-
-        mine.textContent = data[0].clicks;
-
-    } else {
-
-        await fetch(
-            SUPABASE_URL + "/rest/v1/device_clicks",
-            {
-                method:"POST",
-                headers:{
-                    "apikey":SUPABASE_KEY,
-                    "Content-Type":"application/json"
-                },
-                body:JSON.stringify({
-                    device_id:deviceID,
-                    clicks:0
-                })
-            }
-        );
-
-        mine.textContent = 0;
-    }
+    mine.textContent = 0;
+  }
 }
 
+button.onclick = async () => {
 
-// Button press
-button.onclick = async ()=>{
+  button.classList.toggle("glow");
 
-    button.classList.toggle("glow");
+  // Increment global counter safely
+  const rpc = await fetch(
+    `${SUPABASE_URL}/rest/v1/rpc/increment_clicks`,
+    {
+      method: "POST",
+      headers,
+      body: "{}"
+    }
+  );
 
+  const newTotal = await rpc.json();
+  total.textContent = newTotal;
 
-    let current = Number(total.textContent);
-    current++;
+  // Update this device's counter
+  let my = Number(mine.textContent) + 1;
 
+  await fetch(
+    `${SUPABASE_URL}/rest/v1/device_clicks?device_id=eq.${deviceID}`,
+    {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({
+        clicks: my
+      })
+    }
+  );
 
-    // Update global count
-    await fetch(
-        SUPABASE_URL + "/rest/v1/button_stats?id=eq.1",
-        {
-            method:"PATCH",
-            headers:{
-                "apikey":SUPABASE_KEY,
-                "Content-Type":"application/json"
-            },
-            body:JSON.stringify({
-                total_clicks:current
-            })
-        }
-    );
-
-
-    // Update device count
-    let myCurrent = Number(mine.textContent);
-    myCurrent++;
-
-
-    await fetch(
-        SUPABASE_URL + "/rest/v1/device_clicks?device_id=eq." + deviceID,
-        {
-            method:"PATCH",
-            headers:{
-                "apikey":SUPABASE_KEY,
-                "Content-Type":"application/json"
-            },
-            body:JSON.stringify({
-                clicks:myCurrent
-            })
-        }
-    );
-
-
-    total.textContent=current;
-    mine.textContent=myCurrent;
+  mine.textContent = my;
 };
 
+getTotal();
+getMine();
 
-// Initial load
-loadTotal();
-loadMyClicks();
-
-
-// Refresh total automatically
-setInterval(loadTotal,3000);
-
+setInterval(getTotal, 2000);
 </script>
 
 
